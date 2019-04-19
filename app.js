@@ -75,10 +75,14 @@ app.get('/', (req, res) => {
       res.render('index', {files: false});
     } else {
       files.map(file => {
+        console.log({file: file});
         if(file.contentType === 'image/jpeg' || file.contentType === "image/png") {
           file.isImage = true;
+        } else if(file.contentType === 'video/mp4') {
+          file.isVideo = true
         } else {
           file.isImage = false;
+          file.isVideo = false;
         }
       });
       res.render('index', {files: files});
@@ -144,6 +148,30 @@ app.get('/image/:filename', (req, res) => {
   } else {
     res.status(404).json({
       err: 'Not an image'
+    });
+  }
+  
+  });
+});
+
+// @route GET /video/:filename
+// @desc Display video
+app.get('/video/:filename', (req, res) => {
+  gfs.files.findOne({filename: req.params.filename}, (err, file) => {
+     if(!file) {
+      return res.status(404).json({
+        err: 'No file exist'
+      });
+  }
+
+  // check if image
+  if(file.contentType === 'video/mp4') {
+    //Read output to browser
+    const readstream = gfs.createReadStream(file.filename);
+    readstream.pipe(res);
+  } else {
+    res.status(404).json({
+      err: 'Not video'
     });
   }
   
